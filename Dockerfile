@@ -29,11 +29,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Instala apenas o runtime do Postgres e cria utilizador sem privilégios
+# Instala apenas o runtime do Postgres e cria utilizador com o mesmo UID/GID
+# do utilizador 'deploy' no host (confirma com: id deploy)
+ARG DEPLOY_UID=1001
+ARG DEPLOY_GID=1001
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    && addgroup --system appgroup \
-    && adduser --system --ingroup appgroup --no-create-home appuser \
+    && addgroup --gid ${DEPLOY_GID} deploy \
+    && adduser --uid ${DEPLOY_UID} --ingroup deploy --no-create-home --disabled-password --gecos "" deploy \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala dependências a partir dos wheels gerados no builder
@@ -47,9 +51,9 @@ COPY . .
 RUN sed -i 's/\r$//' /app/entrypoint.sh \
     && chmod +x /app/entrypoint.sh \
     && mkdir -p /app/staticfiles /app/media \
-    && chown -R appuser:appgroup /app
+    && chown -R deploy:deploy /app
 
-USER appuser
+USER deploy
 
 EXPOSE 8000
 
