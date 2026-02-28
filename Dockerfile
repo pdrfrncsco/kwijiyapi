@@ -43,13 +43,15 @@ RUN pip install --no-cache-dir /wheels/*
 COPY . .
 
 # Ajustamos as permissões para o novo usuário
-RUN chown -R appuser:appgroup /app
+# Garantimos que staticfiles e media existam e sejam graváveis pelo appuser
+RUN mkdir -p /app/staticfiles /app/media && \
+    chmod +x /app/entrypoint.sh && \
+    chown -R appuser:appgroup /app
 
 # Mudamos para o usuário sem privilégios
 USER appuser
 
 EXPOSE 8000
 
-# Removi o --reload (ideal para produção). 
-# Se precisar de reload no desenvolvimento, sobrescreva este comando no docker-compose.yml
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Script de inicialização (migrations + collectstatic + gunicorn)
+ENTRYPOINT ["/app/entrypoint.sh"]
