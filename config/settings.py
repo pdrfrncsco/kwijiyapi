@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='http://localhost:8000', cast=Csv())
 
 # -------------------------------------------------------------------
 # Application definition
@@ -132,6 +133,10 @@ SIMPLE_JWT = {
 # CORS
 # -------------------------------------------------------------------
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Restrict in production
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
+
+
 
 # -------------------------------------------------------------------
 # Email — console backend for development
