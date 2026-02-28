@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/v1/progress/', include('progress.urls')),
     path('api/v1/rankings/', include('rankings.urls')),
     path('api/v1/users/', include('users.profile_urls')),
+    path('api/v1/analytics/', include('analytics.urls')),
 
     # Swagger / API Docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>Analytics Kwijiya</h1>
+
+<div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:24px;">
+  <div style="flex:1; min-width:220px; padding:16px; border-radius:12px; background:#f5f5f5;">
+    <h2>Utilizadores</h2>
+    <p><strong>Total:</strong> {{ total_users }}</p>
+    <p><strong>Novos (24h):</strong> {{ new_users_24h }}</p>
+    <p><strong>Ativos (24h):</strong> {{ active_users_24h }}</p>
+  </div>
+
+  <div style="flex:1; min-width:220px; padding:16px; border-radius:12px; background:#f5f5f5;">
+    <h2>Quizzes</h2>
+    <p><strong>Sessões Totais:</strong> {{ total_sessions }}</p>
+    <p><strong>Sessões Completas:</strong> {{ completed_sessions }}</p>
+    <p><strong>Taxa de Conclusão:</strong> {{ completion_rate }}</p>
+  </div>
+</div>
+
+{% endblock %}
+
