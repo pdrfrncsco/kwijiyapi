@@ -44,6 +44,8 @@ RUN sed -i 's/\r$//' /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
     chown -R deploy:deploygroup /app
 
+RUN mkdir -p /app/staticfiles /app/media && \
+    chown -R deploy:deploygroup /app/staticfiles /app/media
 # Muda para o usuário sem privilégios antes de iniciar
 USER deploy
 

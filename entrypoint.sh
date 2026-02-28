@@ -9,6 +9,9 @@ echo "Starting deployment checks..."
 echo "Applying database migrations..."
 python manage.py migrate --noinput
 
+echo "Creating staticfiles directory..."
+mkdir -p /app/staticfiles
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
