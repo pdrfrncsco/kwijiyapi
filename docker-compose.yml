@@ -21,9 +21,9 @@ services:
     build: .
     restart: unless-stopped
     volumes:
-      - .:/app                                  # hot-reload do código em desenvolvimento
-      - static_volume:/app/staticfiles          # volume gerido pelo Docker — resolve o PermissionError
-      - media_volume:/app/media
+      - .:/app                                      # código
+      - ./staticfiles:/app/staticfiles              # ← bind mount directo para o host
+      - ./media:/app/media                          # ← idem para media
     ports:
       - "8005:8000"
     env_file:
@@ -32,7 +32,6 @@ services:
       db:
         condition: service_healthy
 
+
 volumes:
   postgres_data:
-  static_volume:
-  media_volume:
