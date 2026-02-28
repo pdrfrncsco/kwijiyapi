@@ -26,17 +26,18 @@ RUN pip install --no-cache-dir /wheels/*
 
 COPY . .
 
-# --- ADICIONE ESTAS LINHAS AQUI ---
-# Dá permissão ao usuário deploy e torna o script executável
-RUN chown -R deploy:deploygroup /app && \
-    chmod +x /app/entrypoint.sh
+# Verificamos se o arquivo existe e ajustamos permissões em passos separados para depuração
+RUN ls -la /app/entrypoint.sh && \
+    chown -R deploy:deploygroup /app && \
+    chmod +x /app/entrypoint.sh [cite: 1, 4]
 
+# Mudamos para o usuário de produção
 USER deploy
 
-# O ENTRYPOINT garante que as migrações rodem sempre
+# O ENTRYPOINT deve ser o caminho absoluto
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 EXPOSE 8000
 
-# O CMD vira o argumento padrão para o entrypoint
+# Todos os argumentos devem ser strings (com aspas)
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
