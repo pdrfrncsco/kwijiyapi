@@ -1,11 +1,13 @@
 services:
+
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: kwijiya_db
-      POSTGRES_USER: kwijiya_user
+      POSTGRES_DB:       kwijiya_db
+      POSTGRES_USER:     kwijiya_user
       POSTGRES_PASSWORD: "Gc)0vmwYNT)#4g*D"
     ports:
       - "5433:5432"
@@ -17,8 +19,11 @@ services:
 
   web:
     build: .
+    restart: unless-stopped
     volumes:
-      - .:/app
+      - .:/app                                  # hot-reload do código em desenvolvimento
+      - static_volume:/app/staticfiles          # volume gerido pelo Docker — resolve o PermissionError
+      - media_volume:/app/media
     ports:
       - "8005:8000"
     env_file:
@@ -29,3 +34,5 @@ services:
 
 volumes:
   postgres_data:
+  static_volume:
+  media_volume:
