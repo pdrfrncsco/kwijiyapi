@@ -1,0 +1,30 @@
+from rest_framework import serializers
+from .models import CustomUser
+
+
+class RequestOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6, min_length=6)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    title = serializers.ReadOnlyField()
+    xp_for_next_level = serializers.ReadOnlyField()
+    xp_progress = serializers.ReadOnlyField()
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'id', 'email', 'username', 'avatar', 'age_group',
+            'total_xp', 'level', 'streak_days', 'coins',
+            'title', 'xp_for_next_level', 'xp_progress',
+            'is_guest', 'last_activity', 'created_at',
+        ]
+        read_only_fields = [
+            'id', 'email', 'total_xp', 'level', 'streak_days',
+            'coins', 'is_guest', 'created_at',
+        ]
