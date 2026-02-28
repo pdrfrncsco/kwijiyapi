@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: kwijiya_db
       POSTGRES_USER: kwijiya_user
-      POSTGRES_PASSWORD: kwijiya_pass_2024
+      POSTGRES_PASSWORD: Gc)0vmwYNT)#4g*D
     ports:
       - "5432:5432"
     healthcheck:
