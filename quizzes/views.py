@@ -212,7 +212,13 @@ def submit_answer(request):
             is_correct=True,
         ).count()
         progress.accuracy_rate = round(correct_total / total_answers * 100, 1) if total_answers else 0
-        progress.level = session.level
+        
+        # FIX: Do not overwrite level if current session level is lower than user level
+        # Actually, user progress level should reflect the highest level unlocked or current working level?
+        # Let's say it tracks the highest level reached.
+        if session.level > progress.level:
+             progress.level = session.level
+             
         progress.last_activity = timezone.now()
         progress.save()
 
@@ -262,10 +268,11 @@ def start_placement_test(request):
     from the default language (Kimbundu - 'kmb') or random.
     """
     if request.user.placement_test_completed:
-        return Response(
-            {'error': 'Teste de nivelamento já realizado.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        # If already completed, just return success with empty questions to allow frontend to redirect
+        return Response({
+            'message': 'Teste de nivelamento já realizado.',
+            'completed': True
+        }, status=status.HTTP_200_OK)
 
     # Get Kimbundu or first active language
     language = Language.objects.filter(code='kmb', is_active=True).first()
