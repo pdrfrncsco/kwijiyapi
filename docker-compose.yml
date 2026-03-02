@@ -6,9 +6,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB:       kwijiya_db
-      POSTGRES_USER:     kwijiya_user
-      POSTGRES_PASSWORD: "Gc)0vmwYNT)#4g*D"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5433:5432"
     healthcheck:
@@ -20,6 +20,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    volumes:
+      - redis_data_prod:/data
     ports:
       - "6379:6379"
 
@@ -42,6 +44,7 @@ services:
 
   celery_worker:
     build: .
+    restart: unless-stopped
     command: celery -A config worker -l info
     volumes:
       - .:/app
@@ -53,7 +56,8 @@ services:
 
   celery_beat:
     build: .
-    command: celery -A config beat -l info
+    restart: unless-stopped
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - .:/app
     env_file:
@@ -64,3 +68,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data_prod:
