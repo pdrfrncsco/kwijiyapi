@@ -1,5 +1,5 @@
 """
-Quiz engine views: start_quiz, submit_answer, session detail.
+Quiz engine views: start_quiz, submit_answer, session detail, placement test.
 """
 
 from rest_framework import status
@@ -9,11 +9,13 @@ from rest_framework.response import Response
 from rest_framework import generics
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 
 from .models import Question, Option, QuizSession
 from .serializers import (
     StartQuizSerializer, SubmitAnswerSerializer,
     QuizSessionSerializer, QuestionSerializer,
+    PlacementQuestionSerializer
 )
 from languages.models import Language
 from gamification.services import award_xp, update_streak, check_level_up
@@ -237,6 +239,7 @@ def submit_answer(request):
             'total_makuta': session.total_makuta_earned,
             'correct': session.correct_answers,
             'total': session.total_questions,
+            'leveled_up': leveled_up if 'leveled_up' in locals() else False,
         }
 
     return Response(response_data, status=status.HTTP_200_OK)
@@ -249,3 +252,82 @@ class QuizSessionDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return QuizSession.objects.filter(user=self.request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_placement_test(request):
+    """
+    Start placement test: returns 5 simple level 1 questions
+    from the default language (Kimbundu - 'kmb') or random.
+    """
+    if request.user.placement_test_completed:
+        return Response(
+            {'error': 'Teste de nivelamento já realizado.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Get Kimbundu or first active language
+    language = Language.objects.filter(code='kmb', is_active=True).first()
+    if not language:
+        language = Language.objects.filter(is_active=True).first()
+    
+    if not language:
+        return Response(
+            {'error': 'Nenhuma língua activa disponível.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Get 5 random level 1 questions
+    questions = Question.objects.filter(
+        language=language,
+        difficulty=1
+    ).order_by('?')[:5]
+
+    return Response({
+        'language': language.name,
+        'language_code': language.code,
+        'questions': PlacementQuestionSerializer(questions, many=True).data
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def submit_placement_test(request):
+    """
+    Submit placement test results.
+    Calculates score and sets initial user level.
+    """
+    if request.user.placement_test_completed:
+        return Response(
+            {'error': 'Teste de nivelamento já realizado.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+    correct_count = request.data.get('correct_count', 0)
+    total_questions = request.data.get('total_questions', 5)
+    
+    # Determine initial level
+    initial_level = 1
+    if correct_count >= 5:
+        initial_level = 3
+    elif correct_count >= 3:
+        initial_level = 2
+    
+    # Update user
+    user = request.user
+    user.level = initial_level
+    user.placement_test_completed = True
+    
+    # Award some initial XP/Coins to welcome
+    user.total_xp += 50
+    user.coins += 50
+    user.save()
+    
+    return Response({
+        'initial_level': initial_level,
+        'message': f'Parabéns! Começará no Nível {initial_level}.',
+        'xp_awarded': 50,
+        'coins_awarded': 50
+    })

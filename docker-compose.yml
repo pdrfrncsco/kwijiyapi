@@ -17,13 +17,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
   web:
     build: .
     restart: unless-stopped
     volumes:
-      - .:/app                                      # código
-      - ./staticfiles:/app/staticfiles              # ← bind mount directo para o host
-      - ./media:/app/media                          # ← idem para media
+      - .:/app
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
     ports:
       - "8005:8000"
     env_file:
@@ -31,7 +37,30 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
 
+  celery_worker:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - web
+      - redis
+
+  celery_beat:
+    build: .
+    command: celery -A config beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - web
+      - redis
 
 volumes:
   postgres_data:

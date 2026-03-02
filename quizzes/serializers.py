@@ -5,8 +5,14 @@ from .models import Word, Question, Option, QuizSession
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        fields = ['id', 'text']
+        fields = ["id", "text"]
         # Note: is_correct is NOT exposed to the client
+
+
+class PlacementOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        fields = ["id", "text", "is_correct"]
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -15,24 +21,53 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = [
-            'id', 'question_type', 'difficulty', 'question_text',
-            'timer_seconds', 'xp_value', 'options',
+            "id",
+            "question_type",
+            "difficulty",
+            "question_text",
+            "timer_seconds",
+            "xp_value",
+            "options",
+        ]
+
+
+class PlacementQuestionSerializer(serializers.ModelSerializer):
+    options = PlacementOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = [
+            "id",
+            "question_type",
+            "difficulty",
+            "question_text",
+            "timer_seconds",
+            "xp_value",
+            "options",
         ]
 
 
 class QuizSessionSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True, read_only=True)
     accuracy = serializers.ReadOnlyField()
-    language_name = serializers.CharField(source='language.name', read_only=True)
+    language_name = serializers.CharField(source="language.name", read_only=True)
 
     class Meta:
         model = QuizSession
         fields = [
-            'id', 'language', 'language_name', 'level',
-            'total_questions', 'correct_answers',
-            'total_xp_earned', 'total_makuta_earned',
-            'accuracy', 'is_completed',
-            'started_at', 'completed_at', 'questions',
+            "id",
+            "language",
+            "language_name",
+            "level",
+            "total_questions",
+            "correct_answers",
+            "total_xp_earned",
+            "total_makuta_earned",
+            "accuracy",
+            "is_completed",
+            "started_at",
+            "completed_at",
+            "questions",
         ]
 
 

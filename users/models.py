@@ -58,6 +58,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     streak_days = models.PositiveIntegerField(default=0)
     coins = models.PositiveIntegerField(default=0)  # Makuta
     last_activity = models.DateTimeField(null=True, blank=True)
+    
+    # Progress flags
+    placement_test_completed = models.BooleanField(default=False)
 
     # Account flags
     is_guest = models.BooleanField(default=False)
