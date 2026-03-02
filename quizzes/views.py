@@ -17,7 +17,8 @@ from .serializers import (
 )
 from languages.models import Language
 from gamification.services import award_xp, update_streak, check_level_up
-from progress.models import UserAnswer, UserProgress
+from progress.models import UserAnswer, UserProgress, SpacedRepetitionItem
+from .services import get_adaptive_questions
 
 
 @api_view(['POST'])
@@ -43,11 +44,13 @@ def start_quiz(request):
             status=status.HTTP_404_NOT_FOUND,
         )
 
-    # Get questions for this language and level
-    questions = Question.objects.filter(
+    # Get adaptive questions
+    questions = get_adaptive_questions(
+        user=request.user,
         language=language,
-        difficulty=level,
-    ).order_by('?')[:num_questions]
+        level=level,
+        count=num_questions
+    )
 
     if not questions:
         return Response(
@@ -60,7 +63,7 @@ def start_quiz(request):
         user=request.user,
         language=language,
         level=level,
-        total_questions=questions.count(),
+        total_questions=len(questions),
     )
     session.questions.set(questions)
 
@@ -68,7 +71,7 @@ def start_quiz(request):
         'session_id': str(session.id),
         'language': language.name,
         'level': level,
-        'total_questions': questions.count(),
+        'total_questions': len(questions),
         'questions': QuestionSerializer(questions, many=True).data,
     }, status=status.HTTP_201_CREATED)
 
@@ -145,6 +148,26 @@ def submit_answer(request):
         time_taken=time_taken,
         quiz_session=session,
     )
+    
+    # Update Spaced Repetition (SM-2)
+    quality = 0
+    if is_correct:
+        # Calculate quality based on speed
+        ratio = time_taken / question.timer_seconds
+        if ratio < 0.5:
+            quality = 5
+        elif ratio < 0.8:
+            quality = 4
+        else:
+            quality = 3
+    else:
+        quality = 0
+        
+    srs_item, _ = SpacedRepetitionItem.objects.get_or_create(
+        user=request.user,
+        question=question
+    )
+    srs_item.schedule_next(quality)
 
     # Get correct option for feedback
     correct_option = question.options.filter(is_correct=True).first()
