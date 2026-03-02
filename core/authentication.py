@@ -25,7 +25,7 @@ def send_otp_email(email, otp_code):
             f'Este código expira em {getattr(settings, "OTP_EXPIRY_MINUTES", 10)} minutos.\n\n'
             f'Se não solicitou este código, ignore esta mensagem.'
         ),
-        from_email='noreply@kwijiya.ao',
+        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
     )
