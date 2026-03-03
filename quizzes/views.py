@@ -21,6 +21,7 @@ from languages.models import Language
 from gamification.services import award_xp, update_streak
 from progress.models import UserAnswer, UserProgress, SpacedRepetitionItem
 from .services import get_adaptive_questions
+from .session_config import get_config
 
 
 @api_view(['POST'])
@@ -35,7 +36,11 @@ def start_quiz(request):
 
     language_code = serializer.validated_data['language_code']
     level = serializer.validated_data['level']
-    num_questions = serializer.validated_data['num_questions']
+    
+    # Use session config based on user's age group
+    age_group = getattr(request.user, 'age_group', 'adult')
+    config = get_config(age_group)
+    num_questions = config.questions_per_session
 
     # Validate language
     try:

@@ -1,8 +1,8 @@
 """
 Seed data command — populates the database with:
-- Kimbundu language
-- Words (50+ vocabulary items across 3 levels)
-- Questions (30+ questions across 3 levels)
+- Kimbundu language (comprehensive vocabulary)
+- Words (100+ vocabulary items across 3 levels)
+- Questions (60+ questions across 3 levels)
 - Badges
 """
 
@@ -66,16 +66,31 @@ class Command(BaseCommand):
             ('Etu', 'Nós', 1, 'pronomes', 'Pronome pessoal da primeira pessoa do plural.'),
             ('Enu', 'Vós/Vocês', 1, 'pronomes', 'Pronome pessoal da segunda pessoa do plural.'),
             ('Ala', 'Eles/Elas', 1, 'pronomes', 'Pronome pessoal da terceira pessoa do plural.'),
-            ('Kiambote', 'Olá/Bom dia', 1, 'saudacoes', 'Saudação formal em Kimbundu. Usada para cumprimentar.'),
+            ('Kiambote', 'Está Bom', 1, 'saudacoes', 'Saudação formal em Kimbundu. Usada para cumprimentar.'),
             ('Kala kiambote', 'Fique bem', 1, 'saudacoes', 'Despedida formal em Kimbundu.'),
             ('Weza kiambote', 'Bem-vindo', 1, 'saudacoes', 'Expressão de boas-vindas.'),
             ('Inga', 'Sim', 1, 'saudacoes', 'Afirmação en Kimbundu.'),
             ('Kana', 'Não', 1, 'saudacoes', 'Negação em Kimbundu.'),
-            ('Ngibanze', 'Obrigado', 1, 'saudacoes', 'Expressão de gratidão.'),
+            ('Ngasakidila', 'Obrigado', 1, 'saudacoes', 'Expressão de gratidão.'),
             ('Tata', 'Pai', 1, 'familia', 'Pai na tradição Kimbundu.'),
             ('Mama', 'Mãe', 1, 'familia', 'Mãe na tradição Kimbundu.'),
             ('Mona', 'Filho/Criança', 1, 'familia', 'Criança ou filho em Kimbundu.'),
             ('Dikota', 'Mais velho/Ancião', 1, 'familia', 'Termo de respeito para pessoas mais velhas.'),
+            ('Pange', 'Irmão/Irmã', 1, 'familia', 'Irmão ou irmã.'),
+            ('Kuku', 'Avô/Avó', 1, 'familia', 'Avô ou avó.'),
+            ('Muhatu', 'Mulher', 1, 'familia', 'Mulher adulta.'),
+            ('Diala', 'Homem', 1, 'familia', 'Homem adulto.'),
+            
+            # Level 1 — Cores e Animais Básicos
+            ('Mbwembwa', 'Branco', 1, 'cores', 'Cor branca.'),
+            ('Kixikela', 'Preto', 1, 'cores', 'Cor preta.'),
+            ('Encarnado', 'Vermelho', 1, 'cores', 'Cor vermelha (empréstimo adaptado ou termo específico).'),
+            ('Ngulu', 'Porco', 1, 'animais', 'Animal doméstico comum.'),
+            ('Hosi', 'Leão', 1, 'animais', 'Rei dos animais.'),
+            ('Njila', 'Pássaro', 1, 'animais', 'Ave em geral.'),
+            ('Mbwa', 'Cão', 1, 'animais', 'Cão doméstico.'),
+            ('Mbau', 'Gato', 1, 'animais', 'Gato doméstico.'),
+
             # Level 2 — Verbos e Números
             ('Kudya', 'Comer', 2, 'verbos', 'Verbo comer no infinitivo.'),
             ('Kunwa', 'Beber', 2, 'verbos', 'Verbo beber no infinitivo.'),
@@ -83,8 +98,12 @@ class Command(BaseCommand):
             ('Kubanga', 'Fazer', 2, 'verbos', 'Verbo fazer no infinitivo.'),
             ('Kumona', 'Ver', 2, 'verbos', 'Verbo ver no infinitivo.'),
             ('Kuzuela', 'Falar', 2, 'verbos', 'Verbo falar no infinitivo.'),
-            ('Kutena', 'Amar', 2, 'verbos', 'Verbo amar no infinitivo.'),
+            ('Kutena', 'Amar/Poder', 2, 'verbos', 'Verbo amar ou poder.'),
             ('Kukala', 'Estar/Ser', 2, 'verbos', 'Verbo ser ou estar no infinitivo.'),
+            ('Kuzola', 'Gostar/Amar', 2, 'verbos', 'Verbo gostar ou amar.'),
+            ('Kusumba', 'Comprar', 2, 'verbos', 'Verbo comprar.'),
+            ('Kutunga', 'Construir', 2, 'verbos', 'Verbo construir.'),
+            ('Kulala', 'Dormir', 2, 'verbos', 'Verbo dormir.'),
             ('Mosi', 'Um', 2, 'numeros', 'Número um.'),
             ('Iari', 'Dois', 2, 'numeros', 'Número dois.'),
             ('Tatu', 'Três', 2, 'numeros', 'Número três.'),
@@ -93,7 +112,20 @@ class Command(BaseCommand):
             ('Samanu', 'Seis', 2, 'numeros', 'Número seis.'),
             ('Sambari', 'Sete', 2, 'numeros', 'Número sete.'),
             ('Nake', 'Oito', 2, 'numeros', 'Número oito.'),
-            # Level 3 — Cultura, Natureza, Frases
+            ('Ivwa', 'Nove', 2, 'numeros', 'Número nove.'),
+            ('Kwinyi', 'Dez', 2, 'numeros', 'Número dez.'),
+
+            # Level 2 — Alimentos e Natureza Básica
+            ('Mmasa', 'Milho', 2, 'alimentos', 'Milho, base da funge.'),
+            ('Funge', 'Funge', 2, 'alimentos', 'Prato tradicional de Angola.'),
+            ('Mombe', 'Carne', 2, 'alimentos', 'Carne em geral.'),
+            ('Miji', 'Raízes', 2, 'alimentos', 'Raízes comestíveis.'),
+            ('Kixima', 'Poço', 2, 'natureza', 'Poço de água.'),
+            ('Meya', 'Água', 2, 'natureza', 'Água.'),
+            ('Tubya', 'Fogo', 2, 'natureza', 'Fogo.'),
+            ('Kitembu', 'Vento/Tempo', 2, 'natureza', 'Vento ou tempo atmosférico.'),
+
+            # Level 3 — Cultura, Natureza, Frases Complexas
             ('Nzambi', 'Deus', 3, 'cultura', 'Deus na tradição espiritual Kimbundu.'),
             ('Kijila', 'Proibição/Tabu', 3, 'cultura', 'Restrição cultural ou espiritual.'),
             ('Kilombo', 'Acampamento/Comunidade', 3, 'cultura', 'Origem da palavra "quilombo" no Brasil.'),
@@ -101,11 +133,17 @@ class Command(BaseCommand):
             ('Mbanza', 'Cidade/Capital', 3, 'cultura', 'Cidade ou capital. Origem de "Mbanza Kongo".'),
             ('Nzoji', 'Sonho', 3, 'natureza', 'Sonho na tradição Kimbundu.'),
             ('Ndandu', 'Crocodilo', 3, 'animais', 'Animal respeitado na cultura angolana.'),
-            ('Ngulu', 'Porco', 3, 'animais', 'Porco em Kimbundu.'),
             ('Njila', 'Caminho', 3, 'natureza', 'Caminho. Também nome de divindade nas tradições.'),
             ('Kalunga', 'Mar/Oceano', 3, 'natureza', 'Mar ou oceano. Símbolo espiritual importante.'),
             ('Mutue', 'Cabeça', 3, 'corpo', 'Cabeça no corpo humano.'),
             ('Muxima', 'Coração', 3, 'cultura', 'Coração. Também nome da famosa igreja de Muxima.'),
+            ('Kinama', 'Perna', 3, 'corpo', 'Perna.'),
+            ('Lukuaku', 'Braço/Mão', 3, 'corpo', 'Braço ou mão.'),
+            ('Disu', 'Olho', 3, 'corpo', 'Olho (plural: Masu).'),
+            ('Ditu', 'Ouvido', 3, 'corpo', 'Ouvido (plural: Matu).'),
+            ('Kanwa', 'Boca', 3, 'corpo', 'Boca.'),
+            ('Jingonga', 'Provérbios', 3, 'cultura', 'Sabedoria popular.'),
+            ('Missoso', 'Contos/Adivinhas', 3, 'cultura', 'Histórias tradicionais.'),
         ]
 
         words = {}
@@ -126,6 +164,24 @@ class Command(BaseCommand):
 
         # 3. Create Questions
         self.stdout.write('\n❓ Seeding questions...\n')
+        
+        # Helper function to generate options
+        def get_distractors(correct_word, category, count=3):
+            import random
+            options = []
+            # Try to get words from same category
+            same_cat = [w for w, obj in words.items() if obj.category == category and w != correct_word]
+            random.shuffle(same_cat)
+            options.extend(same_cat[:count])
+            
+            # Fill with random words if needed
+            if len(options) < count:
+                other_words = [w for w in words.keys() if w != correct_word and w not in options]
+                random.shuffle(other_words)
+                options.extend(other_words[:count - len(options)])
+            
+            return options
+
         questions_data = [
             # Level 1 — Translation questions
             {
@@ -208,6 +264,22 @@ class Command(BaseCommand):
                 'options': [('Mais velho/Ancião', True), ('Jovem', False), ('Criança', False), ('Bebé', False)],
                 'word': 'Dikota',
             },
+             {
+                'text': 'O que significa "Mbwa"?',
+                'type': 'translation', 'diff': 1, 'xp': 100,
+                'explanation': '"Mbwa" significa cão.',
+                'cultural': '',
+                'options': [('Cão', True), ('Gato', False), ('Leão', False), ('Pássaro', False)],
+                'word': 'Mbwa',
+            },
+             {
+                'text': 'Como se diz "Gato" em Kimbundu?',
+                'type': 'translation', 'diff': 1, 'xp': 100,
+                'explanation': '"Mbau" significa gato.',
+                'cultural': '',
+                'options': [('Mbau', True), ('Mbwa', False), ('Ngulu', False), ('Hosi', False)],
+                'word': 'Mbau',
+            },
 
             # Level 2 — Verbs and Numbers
             {
@@ -289,6 +361,22 @@ class Command(BaseCommand):
                 'cultural': '',
                 'options': [('Seis', True), ('Sete', False), ('Cinco', False), ('Oito', False)],
                 'word': 'Samanu',
+            },
+            {
+                'text': 'Como se diz "Água" em Kimbundu?',
+                'type': 'translation', 'diff': 2, 'xp': 150,
+                'explanation': '"Meya" significa água.',
+                'cultural': 'A água é fonte de vida e purificação.',
+                'options': [('Meya', True), ('Tubya', False), ('Kixima', False), ('Mmasa', False)],
+                'word': 'Meya',
+            },
+            {
+                'text': 'O que significa "Tubya"?',
+                'type': 'translation', 'diff': 2, 'xp': 150,
+                'explanation': '"Tubya" significa fogo.',
+                'cultural': '',
+                'options': [('Fogo', True), ('Água', False), ('Vento', False), ('Terra', False)],
+                'word': 'Tubya',
             },
 
             # Level 3 — Culture, Nature, Complex
@@ -376,6 +464,14 @@ class Command(BaseCommand):
                 'cultural': 'O crocodilo é um animal de grande respeito nas tradições angolanas.',
                 'options': [('Crocodilo', True), ('Leão', False), ('Elefante', False), ('Cobra', False)],
                 'word': 'Ndandu',
+            },
+            {
+                'text': 'Como se diz "Cabeça" em Kimbundu?',
+                'type': 'translation', 'diff': 3, 'xp': 200,
+                'explanation': '"Mutue" significa cabeça.',
+                'cultural': '',
+                'options': [('Mutue', True), ('Muxima', False), ('Kinama', False), ('Lukuaku', False)],
+                'word': 'Mutue',
             },
         ]
 
