@@ -1,107 +1,128 @@
-"""
-Gamification service layer — XP, Streak, Level.
-"""
-
-from django.utils import timezone
-from datetime import timedelta
+from __future__ import annotations
+from datetime import date, timedelta
+from typing import TypedDict
 import logging
-from .models import UserXPLog, Badge, UserBadge
 
+from django.db import transaction
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
 
-def award_xp(user, amount, source='quiz', description=''):
-    """Award XP to a user and log it."""
-    UserXPLog.objects.create(
-        user=user,
-        xp_gained=amount,
-        source=source,
-        description=description,
-    )
-    user.total_xp += amount
-    user.save(update_fields=['total_xp'])
+LEVEL_TITLES = {
+    1: "Mulami", 2: "Mukanda", 3: "Muzumbi", 4: "Mwana",
+    5: "Mukongo", 6: "Mufumu", 7: "Mwenyo", 8: "Nganga",
+    9: "Kalunga", 10: "Hosi", 12: "Kanda", 15: "Soma", 20: "Ngola",
+}
 
 
-def check_level_up(user):
-    """
-    Check if user has enough XP to level up.
-    Formula: XP required for level N = 100 * N
-    Returns True if leveled up.
-    """
-    leveled_up = False
-    while True:
-        xp_needed = 100 * user.level
-        # Total XP needed to reach current level
-        xp_at_current = sum(100 * i for i in range(1, user.level))
-        xp_in_current_level = user.total_xp - xp_at_current
-
-        if xp_in_current_level >= xp_needed:
-            user.level += 1
-            leveled_up = True
-            # Award bonus for level up
-            UserXPLog.objects.create(
-                user=user,
-                xp_gained=0,
-                source='level_up',
-                description=f'Subiu para nível {user.level}!',
-            )
-            # Check for new badges
-            _check_badges(user)
-        else:
-            break
-
-    if leveled_up:
-        user.save(update_fields=['level'])
-
-    return leveled_up
+def get_level_title(level: int) -> str:
+    for lvl in sorted(LEVEL_TITLES.keys(), reverse=True):
+        if level >= lvl:
+            return LEVEL_TITLES[lvl]
+    return "Mulami"
 
 
-def update_streak(user):
-    now = timezone.now().date()
-    logger.info(
-        "update_streak start user=%s streak_days=%s last_activity=%s",
-        user.id,
-        user.streak_days,
-        user.last_activity,
-    )
+def xp_required_for_level(level: int) -> int:
+    """XP necessário para subir do nível `level` para o seguinte."""
+    return int(100 * (level ** 1.65))
 
-    if user.last_activity:
-        last = user.last_activity.date()
-        diff = (now - last).days
 
-        if diff == 0:
-            return
-        elif diff == 1:
-            user.streak_days += 1
-        else:
-            user.streak_days = 1
-    else:
+def total_xp_for_level(level: int) -> int:
+    """XP total acumulado para atingir o nível `level`."""
+    if level <= 1:
+        return 0
+    return sum(xp_required_for_level(i) for i in range(1, level))
+
+
+def xp_to_next_level(current_xp: int, current_level: int) -> int:
+    threshold = total_xp_for_level(current_level + 1)
+    return max(0, threshold - current_xp)
+
+
+def calculate_answer_xp(
+    difficulty: str,
+    time_taken: float,
+    timer_seconds: int,
+    streak_days: int,
+    is_spaced_repetition: bool = False,
+    age_multiplier: float = 1.0,
+) -> int:
+    BASE_XP = {"easy": 10, "medium": 20, "hard": 35}
+    base = BASE_XP.get(difficulty, 10)
+    time_ratio = min(1.0, time_taken / max(timer_seconds, 1))
+    speed_bonus = max(0.0, 1.0 - time_ratio) * 0.5
+    streak_bonus = min(streak_days, 7) * 0.05
+    review_bonus = 0.25 if is_spaced_repetition else 0.0
+    total = base * (1 + speed_bonus + streak_bonus + review_bonus) * age_multiplier
+    return max(5, int(total))
+
+
+@transaction.atomic
+def award_xp(user, xp_amount: int, source: str, makuta_amount: int = 0) -> dict:
+    from .models import UserXPLog, Badge, UserBadge
+
+    old_level = user.level
+    user.total_xp += xp_amount
+    user.coins += makuta_amount
+
+    while user.total_xp >= total_xp_for_level(user.level + 1):
+        user.level += 1
+        user.coins += user.level * 25
+
+    leveled_up = user.level > old_level
+    user.save(update_fields=["total_xp", "level", "coins"])
+    UserXPLog.objects.create(user=user, xp_gained=xp_amount, source=source)
+
+    badges_earned = []
+    existing_ids = set(UserBadge.objects.filter(user=user).values_list("badge_id", flat=True))
+    for badge in Badge.objects.all():
+        if badge.id not in existing_ids and badge.xp_required and user.total_xp >= badge.xp_required:
+            UserBadge.objects.create(user=user, badge=badge)
+            badges_earned.append(badge.name)
+
+    return {
+        "xp_gained": xp_amount,
+        "makuta_gained": makuta_amount,
+        "leveled_up": leveled_up,
+        "new_level": user.level,
+        "level_title": get_level_title(user.level),
+        "total_xp": user.total_xp,
+        "xp_to_next": xp_to_next_level(user.total_xp, user.level),
+        "badges_earned": badges_earned,
+    }
+
+
+def update_streak(user) -> dict:
+    today = timezone.now().date()
+    # Handle DateTimeField -> date conversion
+    last_activity_dt = user.last_activity
+    last_activity_date = last_activity_dt.date() if last_activity_dt else None
+    
+    coins_bonus = 0
+
+    if last_activity_date is None or last_activity_date < today - timedelta(days=1):
         user.streak_days = 1
-
-    if user.streak_days in (3, 7, 14, 30):
-        bonus = user.streak_days * 10
-        award_xp(
-            user,
-            bonus,
-            source='streak',
-            description=f'Bónus de streak de {user.streak_days} dias!',
-        )
+    elif last_activity_date == today - timedelta(days=1):
+        user.streak_days += 1
+    # se last_activity == today, já jogou hoje — não alterar
 
     user.last_activity = timezone.now()
-    user.save(update_fields=['streak_days', 'last_activity'])
-    logger.info(
-        "update_streak end user=%s streak_days=%s last_activity=%s",
-        user.id,
-        user.streak_days,
-        user.last_activity,
-    )
+
+    MILESTONES = {3: 30, 7: 75, 14: 150, 30: 400}
+    if user.streak_days in MILESTONES:
+        coins_bonus = MILESTONES[user.streak_days]
+        user.coins += coins_bonus
+
+    user.save(update_fields=["streak_days", "last_activity", "coins"])
+    return {"streak_days": user.streak_days, "milestone_bonus": user.streak_days if user.streak_days in MILESTONES else 0, "coins_bonus": coins_bonus}
 
 
-def _check_badges(user):
-    """Award any earned but unawarded badges."""
-    earned_badge_ids = UserBadge.objects.filter(user=user).values_list('badge_id', flat=True)
-    eligible = Badge.objects.filter(xp_required__lte=user.total_xp).exclude(id__in=earned_badge_ids)
-
-    for badge in eligible:
-        UserBadge.objects.create(user=user, badge=badge)
+def recover_streak_with_coins(user, cost: int = 50) -> dict:
+    if user.coins < cost:
+        return {"success": False, "reason": "Makuta insuficiente", "coins_required": cost}
+    user.coins -= cost
+    user.streak_days = 1
+    user.last_activity = timezone.now()
+    user.save(update_fields=["coins", "streak_days", "last_activity"])
+    return {"success": True, "coins_remaining": user.coins, "streak_days": user.streak_days}

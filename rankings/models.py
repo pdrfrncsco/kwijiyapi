@@ -41,3 +41,20 @@ class RankingEntry(models.Model):
     class Meta:
         ordering = ['rank']
         unique_together = ['archive', 'user']
+
+
+class WeeklyRankingSnapshot(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="weekly_snapshots"
+    )
+    week_number = models.IntegerField()
+    year = models.IntegerField()
+    xp_week = models.IntegerField()
+    position = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [["user", "week_number", "year"]]
+        indexes = [
+            models.Index(fields=["year", "week_number", "position"]),
+        ]

@@ -18,7 +18,7 @@ from .serializers import (
     PlacementQuestionSerializer
 )
 from languages.models import Language
-from gamification.services import award_xp, update_streak, check_level_up
+from gamification.services import award_xp, update_streak
 from progress.models import UserAnswer, UserProgress, SpacedRepetitionItem
 from .services import get_adaptive_questions
 
@@ -126,6 +126,7 @@ def submit_answer(request):
     # Calculate XP: base_xp * speed_bonus
     xp_earned = 0
     makuta_earned = 0
+    leveled_up = False
 
     if is_correct:
         speed_factor = max(0, 1 - (time_taken / question.timer_seconds))
@@ -137,7 +138,8 @@ def submit_answer(request):
         session.total_makuta_earned += makuta_earned
 
         # Award XP and Makuta to user
-        award_xp(request.user, xp_earned, source='quiz')
+        xp_result = award_xp(request.user, xp_earned, source='quiz')
+        leveled_up = xp_result.get('leveled_up', False)
         request.user.coins += makuta_earned
         request.user.save(update_fields=['coins'])
 
@@ -185,9 +187,6 @@ def submit_answer(request):
 
         # Update streak
         update_streak(request.user)
-
-        # Check level up
-        leveled_up = check_level_up(request.user)
 
         # Bonus for completing session — streak bonus
         if session.accuracy >= 80:

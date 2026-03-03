@@ -2,6 +2,7 @@
 Quiz models: Word, Question, Option, QuizSession.
 """
 
+from datetime import date
 import uuid
 from django.db import models
 from django.conf import settings
@@ -139,3 +140,30 @@ class QuizSession(models.Model):
         if self.total_questions == 0:
             return 0
         return round(self.correct_answers / self.total_questions * 100, 1)
+
+
+class SpacedRepetitionCard(models.Model):
+    """Estado SM-2 para cada par (utilizador, pergunta)."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sr_cards"
+    )
+    question = models.ForeignKey(
+        "Question", on_delete=models.CASCADE, related_name="sr_cards"
+    )
+    ease_factor = models.FloatField(default=2.5)
+    interval = models.IntegerField(default=1)
+    repetitions = models.IntegerField(default=0)
+    next_review = models.DateField(default=date.today, db_index=True)
+    last_quality = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [["user", "question"]]
+        indexes = [
+            models.Index(fields=["user", "next_review"]),
+        ]
+
+    @property
+    def is_due(self) -> bool:
+        return self.next_review <= date.today()
