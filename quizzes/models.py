@@ -75,6 +75,7 @@ class Question(models.Model):
     cultural_note = models.TextField(blank=True, default='')
     timer_seconds = models.PositiveIntegerField(default=5)
     xp_value = models.PositiveIntegerField(default=100)
+    min_age = models.PositiveIntegerField(default=0)  # Age restriction
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

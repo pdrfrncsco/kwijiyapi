@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.utils import timezone
 from .models import Question
 
@@ -11,8 +11,18 @@ def get_adaptive_questions(user, language, level, count=10):
     """
     from progress.models import SpacedRepetitionItem, UserAnswer
 
-    # 1. Spaced Repetition Due Items (max 4)
-    from progress.models import SpacedRepetitionItem, UserAnswer
+    # Determine effective difficulty level (clamp to max available)
+    max_diff = Question.objects.filter(language=language).aggregate(Max('difficulty'))['difficulty__max']
+    effective_level = level
+    if max_diff:
+        effective_level = min(level, max_diff)
+        
+    # Determine age restrictions
+    age_limit = 100  # Default adult
+    if user.age_group == 'child':
+        age_limit = 12
+    elif user.age_group == 'teen':
+        age_limit = 17
 
     # Calculate target counts
     count_srs = 4
@@ -28,7 +38,8 @@ def get_adaptive_questions(user, language, level, count=10):
         user=user,
         question__language=language,
         # Allow reviewing questions from current level OR lower levels
-        question__difficulty__lte=level,
+        question__difficulty__lte=effective_level,
+        question__min_age__lte=age_limit,
         next_review__lte=timezone.now()
     ).select_related('question').order_by('next_review')
 
@@ -41,7 +52,8 @@ def get_adaptive_questions(user, language, level, count=10):
     
     new_questions_qs = Question.objects.filter(
         language=language,
-        difficulty=level  # Strict level for new material
+        difficulty=effective_level,  # Strict level for new material
+        min_age__lte=age_limit
     ).exclude(
         id__in=list(answered_ids)
     ).order_by('?')
@@ -61,7 +73,8 @@ def get_adaptive_questions(user, language, level, count=10):
         
         extra_questions = list(Question.objects.filter(
             language=language,
-            difficulty=level
+            difficulty=effective_level,
+            min_age__lte=age_limit
         ).exclude(
             id__in=exclude_ids
         ).order_by('?')[:needed])

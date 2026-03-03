@@ -20,14 +20,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = [
-            'id', 'email', 'username', 'avatar', 'age_group',
+            'id', 'email', 'username', 'avatar', 'age_group', 'date_of_birth',
             'total_xp', 'level', 'streak_days', 'coins',
             'title', 'xp_for_next_level', 'xp_progress',
             'is_guest', 'last_activity', 'created_at',
             'badges',
         ]
         read_only_fields = [
-            'id', 'email', 'total_xp', 'level', 'streak_days',
+            'id', 'email', 'age_group', 'total_xp', 'level', 'streak_days',
             'coins', 'is_guest', 'created_at',
         ]
 

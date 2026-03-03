@@ -51,6 +51,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True, null=True, blank=True)
     avatar = models.CharField(max_length=100, blank=True, default='')
     age_group = models.CharField(max_length=10, choices=AGE_GROUP_CHOICES, default='adult')
+    date_of_birth = models.DateField(null=True, blank=True)
 
     # Gamification fields
     total_xp = models.PositiveIntegerField(default=0)
@@ -82,6 +83,27 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email or self.username or str(self.id)
+
+    def save(self, *args, **kwargs):
+        self.update_age_group()
+        super().save(*args, **kwargs)
+
+    def update_age_group(self):
+        """Update age group based on date of birth."""
+        if not self.date_of_birth:
+            return
+            
+        today = timezone.now().date()
+        age = today.year - self.date_of_birth.year - (
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
+        
+        if age < 13:
+            self.age_group = 'child'
+        elif age < 18:
+            self.age_group = 'teen'
+        else:
+            self.age_group = 'adult'
 
     @property
     def xp_for_next_level(self):
